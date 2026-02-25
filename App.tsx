@@ -27,12 +27,12 @@ import { onAuthStateChanged, signOut } from './services/firebaseService';
 
 // Hardcoded test user (permanently logged in)
 const TEST_USER: User = {
-  id: 'J2MOg2wyiGZWjS488w0a3PzmE9r1',
-  name: 'Mr',
-  surname: 'Principal',
+  id: 'chAsRCQ0CUPdmghW0d5Acbsad922',
+  name: 'Liam',
+  surname: 'Smith',
   email: 'liam@gmail.com',
   password: 'Imsocool123',
-  role: UserRole.PRINCIPAL,
+  role: UserRole.STUDENT,
   grade: 'Grade 8',
   avatar: 'https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/users%2FJ2MOg2wyiGZWjS488w0a3PzmE9r1%2Favatar?alt=media&token=3a82ed67-c0f5-4702-9011-bd9393b7d7d7',
   school: 'Test High school',
