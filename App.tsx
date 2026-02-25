@@ -30,7 +30,7 @@ const TEST_USER: User = {
   id: 'J2MOg2wyiGZWjS488w0a3PzmE9r1',
   name: 'Mr',
   surname: 'Principal',
-  email: 'test@gmail.com',
+  email: 'liam@gmail.com',
   password: 'Imsocool123',
   role: UserRole.PRINCIPAL,
   grade: 'Grade 8',
@@ -211,7 +211,7 @@ const App: React.FC = () => {
     const authenticateTestUser = async () => {
       try {
         // Sign in with Firebase Auth using the test user credentials
-        await signInWithEmailAndPassword(auth, currentUser.email || 'test@gmail.com', currentUser.password || 'Imsocool123');
+        await signInWithEmailAndPassword(auth, currentUser.email || 'liam@gmail.com', currentUser.password || 'Imsocool123');
         console.log('✅ Test user authenticated with Firebase Auth');
       } catch (err: any) {
         console.warn('⚠️ Firebase Auth signin failed (may already be signed in):', err.message);
