@@ -1,0 +1,23 @@
+apply plugin: 'com.android.application'
+apply plugin: 'com.huawei.agconnect'
+
+android {
+    compileSdkVersion 31
+    defaultConfig {
+        applicationId "za.co.educater.app"
+        minSdkVersion 21
+        targetSdkVersion 31
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    implementation 'com.huawei.hms:push:6.4.0.300'
+}

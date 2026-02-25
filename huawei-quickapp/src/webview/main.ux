@@ -1,0 +1,137 @@
+<template>
+  <div class="doc-page">
+    <web src="https://app.educater.co.za" id="siteWeb" onmessage="onWebMessage"></web>
+  </div>
+</template>
+
+<style>
+  .doc-page {
+    flex-direction: column;
+    flex: 1;
+  }
+  #siteWeb {
+    flex: 1;
+  }
+</style>
+
+<script>
+import prompt from '@system.prompt'
+import fetch from '@system.fetch'
+
+export default {
+  onInit() {
+    console.log('🚀 Webview component initializing...');
+    // ask permission and register for push; token will be forwarded to the web page
+    this.initializePush();
+  },
+
+  initializePush() {
+    try {
+      // Access push functions from globalThis (set up by ../common/pushNotification)
+      const requestPushPermission = globalThis.requestPushPermission;
+      const registerPush = globalThis.registerPush;
+
+      if (!requestPushPermission || !registerPush) {
+        console.warn('⚠️ Push functions not available from globalThis, trying direct registration');
+        this.tryDirectRegistration();
+        return;
+      }
+
+      console.log('📝 Requesting push permission...');
+      requestPushPermission((err) => {
+        if (err) {
+          console.warn('⚠️ Push permission request error:', err.message);
+          // Try to register anyway without explicit permission
+          this.performRegistration(registerPush);
+        } else {
+          console.log('✅ Permission granted, proceeding to register');
+          this.performRegistration(registerPush);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error initializing push:', error);
+    }
+  },
+
+  performRegistration(registerPush) {
+    try {
+      registerPush((err, token) => {
+        if (!err && token) {
+          console.log('🎫 Token received:', token.substring(0, 30) + '...');
+          this.postTokenToWeb(token);
+        } else {
+          console.warn('⚠️ Registration failed or unavailable:', err?.message || 'unknown error');
+          // Push may not be available in test environment - this is OK
+          console.log('ℹ️ Push notifications may not work in emulator, but will work on real device');
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error during registration:', error);
+    }
+  },
+
+  tryDirectRegistration() {
+    try {
+      console.log('🔄 Attempting direct registration without permission...');
+      // Try accessing push service directly
+      const pushService = this.$service && this.$service.push;
+      if (pushService && pushService.getToken && typeof pushService.getToken === 'function') {
+        pushService.getToken({
+          success: (token) => {
+            console.log('🎫 Direct registration successful:', token.substring(0, 30) + '...');
+            this.postTokenToWeb(token);
+          },
+          fail: (err) => {
+            console.warn('⚠️ Direct registration failed:', err);
+          }
+        });
+      }
+    } catch (error) {
+      console.error('❌ Direct registration error:', error);
+    }
+  },
+
+  postTokenToWeb(token) {
+    const web = this.$element('siteWeb');
+    if (web && web.postMessage) {
+      console.log('📤 Posting token to web component');
+      web.postMessage(JSON.stringify({ type: 'pushToken', token }));
+    } else {
+      console.warn('⚠️ Web element not available');
+    }
+  },
+
+  onWebMessage(event) {
+    let raw = event && (event.data || (event.detail && event.detail.data)) ? (event.data || event.detail.data) : null
+    if (!raw) {
+      return
+    }
+    let payload = raw
+    if (typeof raw === 'string') {
+      try {
+        payload = JSON.parse(raw)
+      } catch (e) {
+        payload = { body: raw }
+      }
+    }
+
+    if (payload.type === 'notify') {
+      const message = payload.body || payload.title || 'Notification'
+      prompt.showToast({ message, duration: 3000 })
+      return
+    }
+
+    if (payload.type === 'requestPush') {
+      // web asks for a fresh token
+      registerPush((err, token) => {
+        const web = this.$element('siteWeb')
+        const resp = { type: 'pushTokenResponse', error: err ? (err.message || err) : null, token: token || null }
+        web && web.postMessage && web.postMessage(JSON.stringify(resp))
+      })
+      return
+    }
+
+    console.log('web message', payload)
+  }
+}
+</script>

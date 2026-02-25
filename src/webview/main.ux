@@ -1,0 +1,15 @@
+<template>
+  <div class="doc-page">
+    <web src="https://www.educater.co.za" id="siteWeb"></web>
+  </div>
+</template>
+
+<style>
+  .doc-page {
+    flex-direction: column;
+    flex: 1;
+  }
+  #siteWeb {
+    flex: 1;
+  }
+</style>

@@ -1,0 +1,2 @@
+// DELETE THIS FOLDER and its contents: nested "web" folders cause resolver errors (e.g., web/web).
+// Remove it from disk or via git (git rm -r).

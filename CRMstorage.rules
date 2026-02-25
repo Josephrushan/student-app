@@ -1,0 +1,40 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      // Since this app uses custom Firestore-based auth without Firebase Auth sessions,
+      // we must allow public read/write to these specific buckets for the app to function.
+      return true; 
+    }
+    
+    // Allow read/write for Educater Sales CRM
+    // Profile pictures for sales reps
+    match /profile_pics/{allPaths=**} {
+      allow read, write: if true;  // Public read/write for custom auth app
+    }
+    
+    match /profile_pictures/{allPaths=**} {
+      allow read: if true;  // Public read for displaying profile pictures
+      allow write: if true;  // Allow writes
+    }
+    
+    // Bank proofs for sales reps
+    match /bank_proofs/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    // Resources (training materials, tools)
+    match /resources/{allPaths=**} {
+      allow read: if true;  // Public read for downloads
+      allow write: if isSignedIn();
+    }
+    
+    // Default deny for other paths (unless other apps add their rules here)
+    match /{allPaths=**} {
+      allow read, write: if false; 
+    }
+  }
+}

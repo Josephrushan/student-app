@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="white">
+    <meta name="apple-mobile-web-app-title" content="educater.">
+    <meta name="theme-color" content="#002135">
+    <title>educater.</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preload" as="image" href="https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/appicon2.png?alt=media&token=e36545a8-38ab-49d6-ad7a-b313cfbfc285">
+    <script src="https://js.paystack.co/v2/inline.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
+    <style>
+      html, body, #root {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+      html {
+        font-size: 16px;
+      }
+      * {
+        font-weight: 400 !important;
+      }
+      .logo-font, .logo-font * {
+        font-weight: 800 !important;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        color: #334155;
+        overscroll-behavior-y: none;
+      }
+      /* Safe area utilities */
+      .pt-safe {
+        padding-top: env(safe-area-inset-top);
+      }
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .h-safe-bottom {
+        height: env(safe-area-inset-bottom);
+      }
+      @media screen and (-webkit-min-device-pixel-ratio: 0) { 
+        select, textarea, input { font-size: 16px !important; }
+      }
+      /* Tailwind CSS and other styles are imported in index.tsx */
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "html2canvas": "https://aistudiocdn.com/html2canvas@^1.4.1",
+    "jspdf": "https://aistudiocdn.com/jspdf@^2.5.2",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+    "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+    "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+    "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js",
+    "firebase/": "https://esm.sh/firebase@^12.7.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

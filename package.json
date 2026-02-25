@@ -1,0 +1,46 @@
+{
+  "name": "copy-of-2026-back-up-02",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "browser-image-compression": "^2.0.2",
+    "device-detector-js": "^3.0.3",
+    "dotenv": "^17.2.3",
+    "firebase": "^12.8.0",
+    "firebase-admin": "^12.0.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.0.0",
+    "lucide-react": "^0.554.0",
+    "mammoth": "^1.8.1",
+    "next-push": "^1.0.9",
+    "pdfjs-dist": "^3.11.174",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-paystack": "^6.0.0",
+    "sonner": "^2.0.7",
+    "vite": "^6.4.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "@babel/types": "^7.29.0",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^22.14.0",
+    "@vercel/node": "^5.5.28",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.24",
+    "buffer": "^6.0.3",
+    "jest": "^30.2.0",
+    "postcss": "^8.5.6",
+    "process": "^0.11.10",
+    "tailwindcss": "^4.1.18",
+    "ts-jest": "^29.4.6",
+    "typescript": "^5.9.0"
+  }
+}

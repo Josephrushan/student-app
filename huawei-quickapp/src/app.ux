@@ -1,0 +1,14 @@
+<script>
+  // Import push notification module to register functions on globalThis
+  import './common/pushNotification.js';
+
+  module.exports = {
+    onCreate() {
+      console.info('✅ Application onCreate');
+      console.log('📱 Push notification module initialized');
+    },
+    onDestroy() {
+      console.info('Application onDestroy');
+    }
+  }
+</script>

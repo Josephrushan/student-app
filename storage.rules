@@ -1,0 +1,105 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isSuperAdmin() {
+      return request.auth.token.email == 'info@visualmotion.co.za';
+    }
+
+    // --- CRM COLLECTIONS (Public Access for Sales Team) ---
+    
+    // Profile pictures for sales reps
+    match /profile_pics/{allPaths=**} {
+      allow read, write: if true;
+    }
+
+    match /profile_pictures/{allPaths=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Bank proofs for sales reps
+    match /bank_proofs/{allPaths=**} {
+      allow read, write: if true;
+    }
+
+    // Incentives images
+    match /incentives/{allPaths=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Resources (training materials, tools)
+    match /resources/{allPaths=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // --- SCHOOL APP COLLECTIONS (Firebase Auth) ---
+
+    // School logos - Authenticated users can upload (UI restricts to principals/teachers)
+    match /schools/{schoolId}/logo {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+    
+    // User avatars - Users can upload their own avatar file
+    match /users/{userId}/avatar {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+    
+    // User profile pictures folder - Users can upload their own
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+    
+    // User cover images folder - Users can upload their own (for all roles)
+    match /users/{userId}/cover/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // General user files - Users can upload to their own directory
+    match /users/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // General uploads - Authenticated users can upload their own
+    match /uploads/{userId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (request.auth.uid == userId || isSuperAdmin());
+    }
+
+    // Assignments - Teachers/Staff can create and upload assignment files
+    match /assignments/{assignmentId}/{allPaths=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+    
+    // Yearbook entries - Authenticated users can upload to their yearbook entries
+    match /yearbook/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
+    // Events - Allow uploads for authenticated users (or any for now)
+    match /events/{allPaths=**} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Default fallback - Deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

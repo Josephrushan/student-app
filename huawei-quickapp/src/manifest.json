@@ -1,0 +1,42 @@
+{
+    "package": "za.co.educater.app",
+    "name": "Educater.co.za",
+    "versionName": "1.0.0",
+    "versionCode": 1,
+    "icon": "/Common/icon-192.png",
+    "minPlatformVersion": 1070,
+    "features": [
+        {
+            "name": "system.prompt"
+        },
+        {
+            "name": "system.push"
+        },
+        {
+            "name": "system.request"
+        },
+        {
+            "name": "service.push"
+        },
+        {
+            "name": "system.fetch"
+        },
+        {
+            "name": "system.webview"
+        }
+    ],
+    "config": {},
+    "router": {
+        "entry": "webview",
+        "pages": {
+            "webview": {
+                "component": "main",
+                "path": "https://app.educater.co.za/"
+            }
+        }
+    },
+    "display": {
+        "menu": true,
+        "orientation": "auto"
+    }
+}

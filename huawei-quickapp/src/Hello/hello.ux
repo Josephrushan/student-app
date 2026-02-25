@@ -1,0 +1,251 @@
+<template>
+    <div class="doc-page">
+        <web class="web-page" src="{{loadUrl}}" trustedurl="{{list}}" onpagestart="onPageStart" onpagefinish="onPageFinish"
+            onmessage="onMessage" ontitlereceive="onTitleReceive" onerror="onError" id="web" supportzoom="{{supportZoom}}"
+            wideviewport="{{wideViewport}}" overviewmodeinload="{{overViewModeLoad}}" useragent="{{userAgent}}"
+            allowthirdpartycookies="{{allowThirdPartyCookies}}" multiwindow="{{multiwindow}}" jumppolicy="{{jumppolicy}}">
+        </web>
+    </div>
+</template>
+
+<style>
+    .doc-page {
+        flex-direction: column;
+        flex-direction: column;
+        justify-content: center;
+        align-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        position: fixed;
+    }
+
+    .web-page {
+        width: 100%;
+        height: 100%;
+    }
+</style>
+<script>
+    import router from "@system.router";
+    import push from "@service.push";
+    import fetch from "@system.fetch";
+
+    export default {
+        props: ['websrc'],
+        data: {
+            title: "",
+            loadUrl: "https://app.educater.co.za",
+            allowThirdPartyCookies: true,
+            supportZoom: true,
+            wideViewport: true,
+            overViewModeLoad: true,
+            userAgent: "default",
+            list: ["new RegExp('https?.*')"],
+            multiwindow: false,
+            jumppolicy: 'default',
+            paystackCallbackUrl: "https://standard.paystack.co/close",
+            pwaCancelUrl: "https://app.educater.co.za/payment/cancel"
+        },
+        onInit() {
+            console.info('🚀 Educater Quick App - Initializing...');
+            this.initializePushNotifications();
+        },
+        
+        // ========== PUSH NOTIFICATIONS ==========
+        initializePushNotifications() {
+            try {
+                console.log('📱 Initializing Huawei Push Kit...');
+                
+                // Access push service directly
+                const pushService = this.$service.push || push;
+                
+                if (!pushService) {
+                    console.warn('⚠️ Push service not available');
+                    return;
+                }
+
+                // Request push permission (if supported)
+                if (pushService.requestPermission && typeof pushService.requestPermission === 'function') {
+                    pushService.requestPermission({
+                        success: () => {
+                            console.log('✅ Push permission granted');
+                            this.registerPush();
+                        },
+                        fail: (err) => {
+                            console.error('❌ Push permission denied:', err);
+                            this.registerPush(); // Try without permission
+                        }
+                    });
+                } else {
+                    // If requestPermission not available, try to register directly
+                    console.log('📝 requestPermission not available, registering directly...');
+                    this.registerPush();
+                }
+            } catch (error) {
+                console.error('❌ Error initializing push:', error);
+            }
+        },
+
+        registerPush() {
+            try {
+                console.log('📝 Registering for push notifications...');
+                
+                const pushService = this.$service.push || push;
+                
+                if (!pushService) {
+                    console.warn('⚠️ Push service not available for registration');
+                    return;
+                }
+
+                // Get registration token (regId)
+                if (pushService.getToken && typeof pushService.getToken === 'function') {
+                    pushService.getToken({
+                        success: (token) => {
+                            console.log('🎫 Huawei Push Token received:', token.substring(0, 30) + '...');
+                            this.sendTokenToFirebase(token);
+                        },
+                        fail: (err) => {
+                            console.error('❌ Failed to get token:', err);
+                        }
+                    });
+                } else {
+                    console.warn('⚠️ push.getToken not available, trying getRegistrationId...');
+                    // Try alternative method
+                    if (pushService.getRegistrationId && typeof pushService.getRegistrationId === 'function') {
+                        pushService.getRegistrationId({
+                            success: (regId) => {
+                                console.log('🎫 Registration ID:', regId.substring(0, 30) + '...');
+                                this.sendTokenToFirebase(regId);
+                            },
+                            fail: (err) => {
+                                console.error('❌ Failed to get registration ID:', err);
+                            }
+                        });
+                    }
+                }
+
+                // Listen for incoming push messages
+                if (pushService.onMessage && typeof pushService.onMessage === 'function') {
+                    pushService.onMessage({
+                        callback: (message) => {
+                            console.log('📨 Push message received:', message);
+                            this.handlePushMessage(message);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Error in registerPush:', error);
+            }
+        },
+
+        sendTokenToFirebase(token) {
+            if (!token) {
+                console.warn('⚠️ No token to send');
+                return;
+            }
+
+            const firebaseUrl = 'https://us-central1-websitey-9f8e4.cloudfunctions.net/saveHuaweiToken';
+            const payload = {
+                regId: token,
+                platform: 'huawei_quickapp',
+                deviceInfo: {
+                    timestamp: new Date().toISOString()
+                }
+            };
+
+            console.log('📤 Sending Huawei token to Firebase...');
+
+            fetch.fetch({
+                url: firebaseUrl,
+                method: 'POST',
+                header: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload),
+                success: (response) => {
+                    console.log('✅ Token saved to Firebase:', response);
+                },
+                fail: (err) => {
+                    console.error('❌ Failed to send token to Firebase:', err);
+                }
+            });
+        },
+
+        handlePushMessage(message) {
+            console.log('🔔 Handling push message:', message);
+            // Message received - it will be displayed by Huawei system
+        },
+
+        // ========== WEB PAGE EVENTS ==========
+        onPageStart(e) {
+            console.log('📄 Page loading started:', e.url);
+        },
+
+        onPageFinish(e) {
+            console.log('✅ Page loaded:', e.url);
+            
+            // Check for Paystack callback
+            this.handlePaystackCallback(e.url);
+        },
+
+        // ========== PAYSTACK PAYMENT FLOW ==========
+        handlePaystackCallback(url) {
+            if (!url) return;
+            
+            const paystackCloseUrl = "standard.paystack.co/close";
+            const isPaystackCallback = url.indexOf(paystackCloseUrl) !== -1;
+
+            if (isPaystackCallback) {
+                console.log('💳 Paystack callback detected, redirecting to dashboard...');
+                
+                // Use setTimeout to ensure payment is processed
+                setTimeout(() => {
+                    // Redirect to PWA home or dashboard
+                    this.$element('web').loadUrl({
+                        url: "https://app.educater.co.za/dashboard"
+                    });
+                    console.log('✅ Redirected to dashboard');
+                }, 1500);
+            }
+        },
+
+        onTitleReceive(e) {
+            this.title = e.title;
+            console.log('📋 Page title:', e.title);
+        },
+
+        onError(e) {
+            console.error('❌ Page Error:', e.errorMsg);
+        },
+
+        onMessage(e) {
+            console.info('💬 Message from web:', e.message, 'URL:', e.url);
+        },
+
+        onShow: function () {
+            console.info("👁️ App shown");
+        },
+
+        onHide: function () {
+            console.info("👁️ App hidden");
+        },
+
+        onBackPress() {
+            console.log('⬅️ Back button pressed');
+            const webComponent = this.$element('web');
+            
+            webComponent.canBack({
+                callback: function (e) {
+                    if (e) {
+                        console.log('🔙 Going back in web history');
+                        webComponent.back();
+                    } else {
+                        console.log('🚪 Exiting app');
+                        router.back();
+                    }
+                }.bind(this)
+            });
+            return true;
+        }
+    }
+</script>
