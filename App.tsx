@@ -34,14 +34,14 @@ const TEST_USER: User = {
   password: 'Imsocool123',
   role: UserRole.STUDENT,
   grade: 'Grade 8',
-  avatar: 'https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/users%2FJ2MOg2wyiGZWjS488w0a3PzmE9r1%2Favatar?alt=media&token=3a82ed67-c0f5-4702-9011-bd9393b7d7d7',
+  avatar: '',
   school: 'Test High school',
   schoolId: 'school_1767719181915',
   schoolLogo: 'https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/schools%2Fschool_1767719181915%2Flogo?alt=media&token=a928d5dc-46a8-46c4-877a-e1f70bbd84a2',
   isPaid: false,
   isGlobalResourceCreator: false,
   contactNumber: '0603253336',
-  coverImage: 'none',
+  coverImage: '',
   funFact: ''
 };
 

@@ -581,25 +581,27 @@ const HomeworkModule: React.FC<HomeworkModuleProps> = ({ currentUser, assignment
                     </div>
                   </div>
 
-                  {/* Center button if needed */}
+                  {/* Button row: Mark complete on left, View on right */}
                   {(currentUser.role !== UserRole.TEACHER && currentUser.role !== UserRole.PRINCIPAL) && (
-                    <div className="mt-4 flex justify-center">
-                      {!isCompleted && (
-                        <button 
-                          onClick={() => markAsComplete(assignment.id)}
-                          className="px-8 md:px-10 py-3 md:py-4 bg-green-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
-                        >
-                          ✓ MARK COMPLETE
-                        </button>
-                      )}
-                      {isCompleted && canRevive && !isTimeExpired && (
-                        <button 
-                          onClick={() => reviveAssignment(assignment.id)}
-                          className="px-8 md:px-10 py-3 md:py-4 bg-blue-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all"
-                        >
-                          ↻ UNDO
-                        </button>
-                      )}
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {!isCompleted && (
+                          <button 
+                            onClick={() => markAsComplete(assignment.id)}
+                            className="px-8 md:px-10 py-3 md:py-4 bg-green-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                          >
+                            ✓ MARK COMPLETE
+                          </button>
+                        )}
+                        {isCompleted && canRevive && !isTimeExpired && (
+                          <button 
+                            onClick={() => reviveAssignment(assignment.id)}
+                            className="px-8 md:px-10 py-3 md:py-4 bg-blue-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all"
+                          >
+                            ↻ UNDO
+                          </button>
+                        )}
+                      </div>
                       <button 
                         onClick={() => setViewingAssignmentId(assignment.id)}
                         className={`px-8 md:px-10 py-3 md:py-4 rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-3 ${isCompleted ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-[#072432] text-white hover:brightness-110'}`}
