@@ -34,7 +34,7 @@ const TEST_USER: User = {
   password: 'Imsocool123',
   role: UserRole.STUDENT,
   grade: 'Grade 8',
-  avatar: '',
+  avatar: 'https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/istockphoto-911033208-612x612.jpg?alt=media&token=cd96ce70-5328-4d99-a856-7a9f63b821d2',
   school: 'Test High school',
   schoolId: 'school_1767719181915',
   schoolLogo: 'https://firebasestorage.googleapis.com/v0/b/websitey-9f8e4.firebasestorage.app/o/schools%2Fschool_1767719181915%2Flogo?alt=media&token=a928d5dc-46a8-46c4-877a-e1f70bbd84a2',
