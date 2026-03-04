@@ -106,22 +106,18 @@ const Layout: React.FC<LayoutProps> = ({
     const filtered = filterItemsBySearch(items);
     if (searchQuery.trim() && filtered.length === 0) return null;
     
-    const gradientId = `section-grad-${label.replace(/\s+/g, '-')}`;
-    
     return (
       <>
         <div className="flex items-center gap-3 mt-4 mb-3 pl-6">
-          <div className="bg-slate-900 rounded-lg p-2 flex-shrink-0 relative">
-            <svg width="20" height="20" viewBox="0 0 24 24" style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-              <defs>
-                <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#00f06e" />
-                  <stop offset="50%" stopColor="#017eb6" />
-                  <stop offset="100%" stopColor="#00b5da" />
-                </linearGradient>
-              </defs>
-            </svg>
-            {React.createElement(icon, { className: 'w-5 h-5', style: { stroke: `url(#${gradientId})`, fill: 'none', strokeWidth: 2 } })}
+          <div 
+            className="rounded-lg p-2 flex-shrink-0 flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, #00f06e 0%, #017eb6 50%, #00b5da 100%)',
+              width: '20px',
+              height: '20px'
+            }}
+          >
+            {React.createElement(icon, { className: 'w-5 h-5 text-slate-900' })}
           </div>
           <p className="text-[16px] font-black text-slate-500">{label}</p>
         </div>
