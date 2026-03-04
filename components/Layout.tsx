@@ -23,8 +23,7 @@ import {
   Building2,
   Inbox,
   Gamepad2,
-  Search,
-  Plus
+  Search
 } from 'lucide-react';
 import Logo from './Logo';
 import ShortcutsModal from './ShortcutsModal';
@@ -261,11 +260,9 @@ const Layout: React.FC<LayoutProps> = ({
           </svg>
           <button
             onClick={() => setIsShortcutsOpen(true)}
-            className="absolute inset-0 rounded-full flex items-center justify-center transition-colors hover:bg-white/80 z-10"
+            className="absolute inset-0 rounded-full flex items-center justify-center transition-colors hover:bg-white/80"
             title="Quick Shortcuts"
-          >
-            <Plus className="w-6 h-6 text-black" />
-          </button>
+          />
         </div>
 
         <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-2xl border-t border-slate-100 z-[50] pb-safe shadow-[0_-15px_40px_rgba(0,0,0,0.06)] flex-shrink-0">
@@ -282,19 +279,21 @@ const Layout: React.FC<LayoutProps> = ({
 
                   return (
                       <button key={item.id} onClick={() => setActiveTab(item.id)} className="flex flex-col items-center justify-center w-full h-full relative group">
-                          <div className="relative w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500">
-                            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
-                              <defs>
-                                <linearGradient id={`navGradient-${item.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                  <stop offset="0%" stopColor="#00f06e" />
-                                  <stop offset="50%" stopColor="#017eb6" />
-                                  <stop offset="100%" stopColor="#00b5da" />
-                                </linearGradient>
-                              </defs>
-                              <circle cx="28" cy="28" r="26" fill="white" stroke={`url(#navGradient-${item.id})`} strokeWidth="4" />
-                            </svg>
-                            <item.icon className={`w-6 h-6 relative z-10 transition-all duration-500 ${isActive ? 'text-black scale-110' : 'text-black'}`} />
-                          </div>
+                          {isActive ? (
+                            <div className="w-12 h-12 rounded-full bg-black flex items-center justify-center shadow-xl scale-110 relative" style={{
+                              background: '#000',
+                              boxShadow: '0 0 20px rgba(0, 240, 110, 0.3), 0 0 0 1px rgba(0, 240, 110, 0.2)'
+                            }}>
+                              <item.icon className="w-6 h-6 relative z-10" style={{
+                                color: '#00f06e',
+                                filter: 'drop-shadow(0 0 6px rgba(1, 126, 182, 0.5))',
+                              }} />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 transition-all duration-500">
+                              <item.icon className="w-6 h-6" />
+                            </div>
+                          )}
                           {isUnread && (
                             <span className={`absolute top-3 right-[22%] w-3 h-3 rounded-full border-2 border-white shadow-md ${
                               isAlertItem ? 'bg-red-500 animate-pulse' : 'bg-[#00ff8e]'
