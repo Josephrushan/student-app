@@ -295,8 +295,8 @@ const Layout: React.FC<LayoutProps> = ({
                               <div className="relative z-10" style={{ display: 'flex' }}>
                                 <item.icon className="w-6 h-6" style={{
                                   stroke: `url(#grad-nav-${item.id})`,
-                                  fill: `url(#grad-nav-${item.id})`,
-                                  strokeWidth: '1.5'
+                                  fill: 'none',
+                                  strokeWidth: '2'
                                 }} />
                               </div>
                             </div>
