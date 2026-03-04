@@ -23,8 +23,7 @@ import {
   Building2,
   Inbox,
   Gamepad2,
-  Search,
-  Zap
+  Search
 } from 'lucide-react';
 import Logo from './Logo';
 import ShortcutsModal from './ShortcutsModal';
@@ -248,13 +247,23 @@ const Layout: React.FC<LayoutProps> = ({
         </main>
 
         {/* Shortcuts Button - Fixed to right side above bottom nav */}
-        <button
-          onClick={() => setIsShortcutsOpen(true)}
-          className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-black hover:bg-neutral-800 text-white shadow-lg flex items-center justify-center transition-colors z-[45]"
-          title="Quick Shortcuts"
-        >
-          <Zap className="w-6 h-6" />
-        </button>
+        <div className="fixed bottom-24 right-6 w-14 h-14 rounded-full z-[45]">
+          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 56 56" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gradientStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#00f06e" />
+                <stop offset="50%" stopColor="#017eb6" />
+                <stop offset="100%" stopColor="#00b5da" />
+              </linearGradient>
+            </defs>
+            <circle cx="28" cy="28" r="26" fill="white" stroke="url(#gradientStroke)" strokeWidth="4" />
+          </svg>
+          <button
+            onClick={() => setIsShortcutsOpen(true)}
+            className="absolute inset-0 rounded-full flex items-center justify-center transition-colors hover:bg-white/80"
+            title="Quick Shortcuts"
+          />
+        </div>
 
         <div className="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-2xl border-t border-slate-100 z-[50] pb-safe shadow-[0_-15px_40px_rgba(0,0,0,0.06)] flex-shrink-0">
           <div className="flex justify-around items-center h-20 max-w-5xl mx-auto px-2">

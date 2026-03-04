@@ -7,7 +7,6 @@ import {
   BookMarked,
   BookOpen,
   Users,
-  Zap,
 } from 'lucide-react';
 import { User, UserRole } from '../types';
 
