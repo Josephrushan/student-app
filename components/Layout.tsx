@@ -179,11 +179,23 @@ const Layout: React.FC<LayoutProps> = ({
 
               <div className="flex items-center justify-end gap-2 md:gap-4 flex-1">
                 <div className="relative cursor-pointer group" onClick={() => setActiveTab('profile')}>
-                  <img 
-                      src={currentUser.avatar} 
-                      alt="User" 
-                      className="h-10 w-10 md:h-9 md:w-9 rounded-full object-cover bg-slate-50 border-2 border-slate-100 shadow-sm group-hover:border-[#00ff8e] transition-all"
-                  />
+                  <div className="relative w-10 h-10 md:w-9 md:h-9">
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <linearGradient id="profileGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="#00f06e" />
+                          <stop offset="50%" stopColor="#017eb6" />
+                          <stop offset="100%" stopColor="#00b5da" />
+                        </linearGradient>
+                      </defs>
+                      <circle cx="20" cy="20" r="19" fill="none" stroke="url(#profileGradient)" strokeWidth="2" opacity="0" className="group-hover:opacity-100 transition-opacity" />
+                    </svg>
+                    <img 
+                        src={currentUser.avatar} 
+                        alt="User" 
+                        className="h-full w-full rounded-full object-cover bg-slate-50 relative z-10"
+                    />
+                  </div>
                 </div>
                 <div className="h-6 w-[1px] bg-slate-100 mx-1"></div>
                 <button onClick={onLogout} className="p-3 text-slate-400 hover:text-red-500 transition-colors active:scale-90">
@@ -227,7 +239,19 @@ const Layout: React.FC<LayoutProps> = ({
                       
                       <div className="border-t border-slate-200 bg-white px-4 py-4 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <img src={currentUser.avatar} alt="User" className="w-10 h-10 rounded-full object-cover ring-2 ring-white ring-offset-2 ring-offset-green-500" />
+                          <div className="relative w-10 h-10">
+                            <svg className="absolute inset-0 w-full h-full" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                              <defs>
+                                <linearGradient id="sidebarProfileGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                  <stop offset="0%" stopColor="#00f06e" />
+                                  <stop offset="50%" stopColor="#017eb6" />
+                                  <stop offset="100%" stopColor="#00b5da" />
+                                </linearGradient>
+                              </defs>
+                              <circle cx="20" cy="20" r="18" fill="none" stroke="url(#sidebarProfileGradient)" strokeWidth="2" />
+                            </svg>
+                            <img src={currentUser.avatar} alt="User" className="relative z-10 w-full h-full rounded-full object-cover" />
+                          </div>
                           <div className="flex flex-col">
                             <p className="text-sm font-semibold text-slate-800">{currentUser.name}</p>
                             <p className="text-xs text-slate-500">{currentUser.email}</p>
