@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, UserRole, YearbookEntry, YearbookImage } from '../types';
 import { Camera, Plus, X, User as UserIcon, Trash2, Heart, ChevronLeft, ChevronRight, Upload, Loader2 } from 'lucide-react';
 import { uploadImage, removeDoc, saveDoc } from '../services/firebaseService';
@@ -9,9 +9,11 @@ interface YearbookModuleProps {
   currentUser: User;
   entries: YearbookEntry[];
   setEntries: React.Dispatch<React.SetStateAction<YearbookEntry[]>>;
+  shouldOpenCreation?: boolean;
+  onCreationOpened?: () => void;
 }
 
-const YearbookModule: React.FC<YearbookModuleProps> = ({ currentUser, entries, setEntries }) => {
+const YearbookModule: React.FC<YearbookModuleProps> = ({ currentUser, entries, setEntries, shouldOpenCreation, onCreationOpened }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewingEntry, setViewingEntry] = useState<YearbookEntry | null>(null);
@@ -25,6 +27,16 @@ const YearbookModule: React.FC<YearbookModuleProps> = ({ currentUser, entries, s
   const isPrincipal = currentUser.role === UserRole.PRINCIPAL;
 
   const filteredEntries = entries.filter(e => e.grade === currentUser.grade).sort((a, b) => b.timestamp - a.timestamp);
+
+  // Open creation form when triggered by shortcut
+  useEffect(() => {
+    if (shouldOpenCreation && !isCreating) {
+      setIsCreating(true);
+      if (onCreationOpened) {
+        onCreationOpened();
+      }
+    }
+  }, [shouldOpenCreation]);
 
   // Added explicit type casting to File[] to resolve 'unknown' property and 'Blob' assignment errors
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {

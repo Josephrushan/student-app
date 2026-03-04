@@ -54,6 +54,17 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  
+  /* Hide custom scrollbar on mobile, show on desktop */
+  @media (max-width: 768px) {
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .custom-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  }
 }
 
 @media screen and (-webkit-min-device-pixel-ratio: 0) { 
@@ -80,6 +91,30 @@
     position: fixed;
     top: 0;
     left: 0;
+  }
+}
+
+/* Burst animation for floating action button */
+@keyframes burst {
+  0% {
+    opacity: 0;
+    transform: translate(calc(-50%), calc(-50%)) scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1);
+  }
+}
+
+/* Slide in animation for shortcuts menu */
+@keyframes slideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

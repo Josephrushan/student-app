@@ -41,10 +41,24 @@ root.render(
   </React.StrictMode>
 );
 
+// Handle Service Worker registration and cleanup in development
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js').then((registration) => {
-    console.log('Service Worker registered with scope:', registration.scope);
-  }).catch((error) => {
-    console.error('Service Worker registration failed:', error);
-  });
+  if (isDevelopment) {
+    // In development, unregister all Service Workers to prevent caching issues
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister();
+        console.log('🗑️ Service Worker unregistered for development');
+      });
+    });
+  } else {
+    // Production: register Service Worker normally
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      console.log('✅ Service Worker registered with scope:', registration.scope);
+    }).catch((error) => {
+      console.error('❌ Service Worker registration failed:', error);
+    });
+  }
 }

@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Assignment, User, UserRole, VisibilityType } from '../types';
 import { 
   Clock, 
@@ -17,6 +17,7 @@ import {
   Camera,
   File as FileIcon,
   ChevronRight,
+  ChevronLeft,
   Globe,
   Building2,
   Lock
@@ -31,9 +32,11 @@ interface HomeworkModuleProps {
   assignments: Assignment[];
   setAssignments: React.Dispatch<React.SetStateAction<Assignment[]>>;
   allUsers: User[];
+  shouldOpenCreation?: boolean;
+  onCreationOpened?: () => void;
 }
 
-const HomeworkModule: React.FC<HomeworkModuleProps> = ({ currentUser, assignments, setAssignments, allUsers }) => {
+const HomeworkModule: React.FC<HomeworkModuleProps> = ({ currentUser, assignments, setAssignments, allUsers, shouldOpenCreation, onCreationOpened }) => {
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewingAssignmentId, setViewingAssignmentId] = useState<string | null>(null);
@@ -57,6 +60,16 @@ const HomeworkModule: React.FC<HomeworkModuleProps> = ({ currentUser, assignment
   const thumbInputRef = useRef<HTMLInputElement>(null);
   const availableSubjects = PRIMARY_GRADES.includes(currentUser.grade) ? PRIMARY_SUBJECTS : HIGH_SCHOOL_SUBJECTS;
   const viewingAssignment = assignments.find(a => a.id === viewingAssignmentId);
+
+  // Open creation form when triggered by shortcut
+  useEffect(() => {
+    if (shouldOpenCreation && !isCreating) {
+      setIsCreating(true);
+      if (onCreationOpened) {
+        onCreationOpened();
+      }
+    }
+  }, [shouldOpenCreation]);
 
   const filteredAssignments = useMemo(() => {
     return assignments.filter(a => a.grade === currentUser.grade);
@@ -299,83 +312,138 @@ const HomeworkModule: React.FC<HomeworkModuleProps> = ({ currentUser, assignment
 
       {/* Detail Modal Overlay */}
       {viewingAssignment && (
-        <div className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-white backdrop-blur-2xl" onClick={() => setViewingAssignmentId(null)}>
-            <div className="bg-white rounded-[3.5rem] shadow-2xl w-full h-full overflow-hidden animate-scale-up border border-white/10 flex flex-col" onClick={e => e.stopPropagation()}>
-                <div className="bg-white p-10 text-slate-900 relative flex-shrink-0">
-                    <button onClick={() => setViewingAssignmentId(null)} className="absolute top-6 right-6 p-3 bg-black text-white hover:bg-slate-800 rounded-2xl transition-all z-10"><X className="w-6 h-6" /></button>
-                    <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase bg-[#00ff8e] text-[#072432] mb-6 inline-block tracking-widest">{viewingAssignment.subject}</span>
-                    <h2 className="text-4xl font-black leading-tight mb-2 tracking-tight text-slate-900">{viewingAssignment.title}</h2>
-                    <div className="flex items-center gap-4 text-slate-500 text-xs font-bold uppercase tracking-widest">
-                        <Clock className="w-4 h-4" /> Due: {viewingAssignment.dueDate}
-                    </div>
+        <div className="fixed inset-0 z-[600] flex flex-col bg-white">
+          {/* Hero Image */}
+          <div className="relative w-full aspect-video bg-white p-6">
+            <div className="w-full h-full bg-slate-100 rounded-2xl overflow-hidden">
+              {viewingAssignment.thumbnailUrl ? (
+                <img src={viewingAssignment.thumbnailUrl} alt={viewingAssignment.title} className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                  <FileText className="w-16 h-16 text-slate-400" />
                 </div>
-                
-                <div className="p-10 flex-1 overflow-y-auto space-y-12 text-left custom-scrollbar bg-white">
-                    {viewingAssignment.thumbnailUrl && (
-                      <div className="w-full aspect-video rounded-[2.5rem] overflow-hidden border border-slate-100 shadow-sm">
-                        <img src={viewingAssignment.thumbnailUrl} className="w-full h-full object-cover" alt="Task Cover" />
-                      </div>
-                    )}
-
-                    <div>
-                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 flex items-center gap-2">
-                           <span className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center shrink-0"><BookOpen className="w-3 h-3" /></span> Educator's Instructions
-                        </h4>
-                        <div className="p-8 bg-slate-50 rounded-[2.5rem] border border-slate-100 text-left">
-                          <p className="text-slate-700 text-lg leading-relaxed font-medium whitespace-pre-wrap">{viewingAssignment.description}</p>
-                        </div>
-                    </div>
-
-                    {viewingAssignment.attachments?.length > 0 && (
-                        <div>
-                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4 flex items-center gap-2">
-                              <span className="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center shrink-0"><Paperclip className="w-3 h-3" /></span> Learning Materials
-                            </h4>
-                            <div className="grid grid-cols-1 gap-4">
-                                {viewingAssignment.attachments.map((att, i) => (
-                                    <div 
-                                        key={i} 
-                                        className="flex items-center justify-between p-4 bg-[#f0f9ff] border border-[#e0f2fe] rounded-[2rem] transition-all group shadow-sm hover:shadow-md"
-                                    >
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm shrink-0">
-                                                {getFileIcon(att.type)}
-                                            </div>
-                                            <div className="text-left min-w-0">
-                                              <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1">Resource File</p>
-                                              <p className="text-[11px] font-bold text-slate-600 truncate max-w-[120px] md:max-w-[200px]">{att.name}</p>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            onClick={() => {
-                                              setViewingAttachmentUrl(att.url);
-                                              setViewingAttachmentName(att.name);
-                                              setViewingAttachmentType(att.type || 'File');
-                                              setViewingAttachmentDescription(viewingAssignment.description || '');
-                                            }}
-                                            className="px-5 py-2.5 bg-[#072432] rounded-[1.25rem] flex items-center gap-3 hover:brightness-125 active:scale-95 transition-all shadow-md group shrink-0"
-                                        >
-                                            <div className="flex flex-col text-left">
-                                                <span className="text-[8px] font-black text-[#00ff8e] uppercase tracking-[0.1em] leading-tight">VIEW</span>
-                                                <span className="text-[8px] font-black text-[#00ff8e] uppercase tracking-[0.1em] leading-tight">FILE</span>
-                                            </div>
-                                            <Eye className="w-3.5 h-3.5 text-[#00ff8e]" strokeWidth={3} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {(currentUser.role === UserRole.TEACHER || currentUser.role === UserRole.PRINCIPAL) && (
-                        <div className="pt-8 border-t border-slate-50 flex justify-end">
-                            <button onClick={(e) => handleDelete(viewingAssignment.id, e)} className="flex items-center gap-2 px-8 py-4 bg-black text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 hover:text-white transition-all">
-                                <Trash2 className="w-5 h-5" /> Delete Academic Record
-                            </button>
-                        </div>
-                    )}
-                </div>
+              )}
             </div>
+          </div>
+          
+          {/* Back Button and Subject Bar */}
+          <div className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-slate-100">
+            <button 
+              onClick={() => setViewingAssignmentId(null)} 
+              className="p-2 bg-black hover:brightness-110 text-white rounded-full transition-all"
+              title="Back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="px-4 py-1.5 rounded-full text-[10px] font-black uppercase bg-[#00ff8e] text-[#072432] tracking-widest">
+              {viewingAssignment.subject}
+            </span>
+          </div>
+          
+          {/* Content scrollable area */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar w-full max-w-5xl mx-auto">
+            <div className="p-6 sm:p-10 space-y-8 text-left">
+              
+              {/* Title */}
+              <h2 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight text-slate-900">
+                {viewingAssignment.title}
+              </h2>
+              
+              {/* Metadata: Due Date */}
+              <div className="flex items-center gap-4 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                <Clock className="w-4 h-4" /> Due: {viewingAssignment.dueDate}
+              </div>
+              
+              {/* Description Section */}
+              {viewingAssignment.description && (
+                <div>
+                  <div className="bg-black rounded-3xl px-4 py-2 inline-block mb-4">
+                    <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-white">Educator's Instructions</h4>
+                  </div>
+                  <p className="text-slate-700 leading-relaxed font-medium text-sm whitespace-pre-wrap mt-4">
+                    {viewingAssignment.description}
+                  </p>
+                </div>
+              )}
+              
+              {/* Attachments Section */}
+              {viewingAssignment.attachments?.length > 0 && (
+                <div>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Learning Materials</h4>
+                  <div className="space-y-4">
+                    {viewingAssignment.attachments.map((att, i) => (
+                      <div 
+                        key={i} 
+                        className="flex items-start p-4 gap-4"
+                      >
+                        <div className="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center shrink-0">
+                          {getFileIcon(att.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Resource File</p>
+                          <p className="text-sm font-bold text-slate-700 truncate">{att.name}</p>
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Trigger download
+                            const link = document.createElement('a');
+                            link.href = att.url;
+                            link.download = att.name || 'file';
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                          className="px-4 py-2 bg-black text-white rounded-full font-bold text-xs uppercase hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 shrink-0"
+                        >
+                          <Eye className="w-4 h-4" />
+                          View
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Bottom Info Bar */}
+          <div className="flex justify-center pb-4 px-1">
+            <div className="bg-black/90 backdrop-blur px-6 py-4 flex items-center justify-between flex-shrink-0 rounded-full w-[calc(100%-8px)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-bold truncate max-w-xs">{viewingAssignment.title}</p>
+                  <p className="text-white/60 text-xs">Due: {viewingAssignment.dueDate}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {viewingAssignment.attachments?.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const att = viewingAssignment.attachments?.[0];
+                      if (att) {
+                        const link = document.createElement('a');
+                        link.href = att.url;
+                        link.download = att.name || 'file';
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }
+                    }}
+                    className="text-white/60 hover:text-white text-xs font-bold px-3 py-1.5 bg-white/10 hover:bg-white/20 rounded-lg transition-all cursor-pointer"
+                  >
+                    {viewingAssignment.attachments.length} {viewingAssignment.attachments.length === 1 ? 'File' : 'Files'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -581,30 +649,28 @@ const HomeworkModule: React.FC<HomeworkModuleProps> = ({ currentUser, assignment
                     </div>
                   </div>
 
-                  {/* Button row: Mark complete on left, View on right */}
+                  {/* Center button if needed */}
                   {(currentUser.role !== UserRole.TEACHER && currentUser.role !== UserRole.PRINCIPAL) && (
-                    <div className="mt-4 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        {!isCompleted && (
-                          <button 
-                            onClick={() => markAsComplete(assignment.id)}
-                            className="px-8 md:px-10 py-3 md:py-4 bg-green-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
-                          >
-                            ✓ MARK COMPLETE
-                          </button>
-                        )}
-                        {isCompleted && canRevive && !isTimeExpired && (
-                          <button 
-                            onClick={() => reviveAssignment(assignment.id)}
-                            className="px-8 md:px-10 py-3 md:py-4 bg-blue-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all"
-                          >
-                            ↻ UNDO
-                          </button>
-                        )}
-                      </div>
+                    <div className="mt-4 flex justify-center gap-4">
+                      {!isCompleted && (
+                        <button 
+                          onClick={() => markAsComplete(assignment.id)}
+                          className="px-4 md:px-6 py-3 md:py-4 bg-green-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                          ✓ MARK COMPLETE
+                        </button>
+                      )}
+                      {isCompleted && canRevive && !isTimeExpired && (
+                        <button 
+                          onClick={() => reviveAssignment(assignment.id)}
+                          className="px-4 md:px-6 py-3 md:py-4 bg-blue-500 text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl hover:brightness-110 active:scale-95 transition-all"
+                        >
+                          ↻ UNDO
+                        </button>
+                      )}
                       <button 
                         onClick={() => setViewingAssignmentId(assignment.id)}
-                        className={`px-8 md:px-10 py-3 md:py-4 rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-3 ${isCompleted ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-[#072432] text-white hover:brightness-110'}`}
+                        className={`px-4 md:px-6 py-3 md:py-4 rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-xl active:scale-95 transition-all flex items-center gap-3 ${isCompleted ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-[#072432] text-white hover:brightness-110'}`}
                         disabled={isCompleted}
                       >
                           VIEW <ChevronRight className="w-4 h-4" />

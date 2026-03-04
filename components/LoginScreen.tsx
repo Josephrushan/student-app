@@ -215,6 +215,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
   const [firstName, setFirstName] = useState('');
   const [surname, setSurname] = useState('');
   const [selectedSchoolId, setSelectedSchoolId] = useState('');
+  const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('');
   const [selectedClass, setSelectedClass] = useState(CLASSES[0]);
   const [selectedRelationship, setSelectedRelationship] = useState('Mother');
@@ -249,6 +250,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
 
   const currentSchool = schools.find(s => s.id === selectedSchoolId);
   const filteredGrades = currentSchool?.level === 'Secondary' ? SECONDARY_GRADES : PRIMARY_GRADES;
+  const filteredSchools = schools.filter(school => 
+    school.name.toLowerCase().includes(schoolSearchQuery.toLowerCase())
+  );
 
   useEffect(() => {
     if (schools.length > 0 && !selectedSchoolId) {
@@ -266,6 +270,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
     setErrorMessage('');
     setSuccessMessage('');
     setShowSignInOption(false);
+    setSchoolSearchQuery('');
     if (view === 'signup_choice') setView('landing');
     else if (view === 'role_staff_choice') setView('signup_choice');
     else if (view === 'forgot_password') setView('form');
@@ -572,23 +577,26 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
           
           {view === 'landing' && (
               <div className="w-full space-y-6 animate-slide-up">
-                  <div className="text-center space-y-2 mb-10"><h2 className="text-3xl text-[#002135] tracking-tight font-black">Welcome back</h2><p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Your digital campus awaits</p></div>
-                  <button onClick={() => { setMode('signin'); setView('form'); }} className="w-full py-6 bg-[#002135] text-white rounded-[2rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-3">Sign in <ArrowRight className="w-4 h-4" /></button>
-                  <button onClick={() => { setMode('signup'); setMode('signup'); setView('signup_choice'); }} className="w-full py-6 bg-white border-2 border-slate-100 text-[#002135] rounded-[2rem] text-sm font-black uppercase tracking-widest shadow-sm hover:border-brand-teal transition-all active:scale-95">Create account</button>
+                  <div className="text-center mb-10 space-y-4">
+                    <div className="flex justify-center"><div className="inline-block px-6 py-1 rounded-full" style={{backgroundColor: '#00ff8e'}}><h2 className="text-[10px] text-black tracking-tight font-black uppercase tracking-widest">welcome back</h2></div></div>
+                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">Your digital campus awaits</p>
+                  </div>
+                  <button onClick={() => { setMode('signin'); setView('form'); }} className="w-full py-4 bg-black text-white rounded-[2rem] text-sm font-black uppercase tracking-widest shadow-2xl shadow-slate-200 transition-all active:scale-95 flex items-center justify-center gap-3">Sign in <ArrowRight className="w-4 h-4" /></button>
+                  <button onClick={() => { setMode('signup'); setMode('signup'); setView('signup_choice'); }} className="w-full py-4 bg-white border-2 border-slate-100 text-[#002135] rounded-[2rem] text-sm font-black uppercase tracking-widest shadow-sm hover:border-brand-teal transition-all active:scale-95">Create account</button>
               </div>
           )}
 
           {view === 'signup_choice' && (
-              <div className="w-full space-y-6 animate-slide-up text-left">
-                  <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 hover:text-[#002135] transition-colors"><ChevronLeft className="w-4 h-4" /> Back</button>
+              <div className="w-full space-y-6 animate-slide-up text-center">
+                  <button onClick={handleBack} className="flex flex-col items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 hover:text-[#002135] transition-colors mx-auto"><div className="w-8 h-8 rounded-full bg-black flex items-center justify-center"><ChevronLeft className="w-4 h-4 text-white" /></div> Back</button>
                   <h3 className="text-2xl text-[#002135] mb-8 font-black">What is your role?</h3>
                   <div className="grid grid-cols-1 gap-4">
-                      <button onClick={() => handleRoleSelection('parent')} className="flex items-center gap-6 p-8 bg-white rounded-[2.5rem] border-2 border-slate-100 hover:border-brand-teal hover:shadow-xl transition-all group text-left">
-                          <div className="p-4 bg-brand-navy/5 rounded-2xl group-hover:bg-[#002135] transition-colors"><UserIcon className="w-8 h-8 text-[#002135] group-hover:text-white" /></div>
+                      <button onClick={() => handleRoleSelection('parent')} className="flex items-center gap-4 p-4 bg-white rounded-[2.5rem] border-2 border-slate-100 hover:border-brand-teal hover:shadow-xl transition-all group text-left">
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0"><UserIcon className="w-8 h-8 text-white" /></div>
                           <div><p className="text-[#002135] text-lg font-black leading-tight">Parent / guardian</p><p className="text-xs text-slate-500 font-bold mt-1">Connect with your child</p></div>
                       </button>
-                      <button onClick={() => handleRoleSelection('staff')} className="flex items-center gap-6 p-8 bg-white rounded-[2.5rem] border-2 border-slate-100 hover:border-brand-teal hover:shadow-xl transition-all group text-left">
-                          <div className="p-4 bg-brand-navy/5 rounded-2xl group-hover:bg-[#002135] transition-colors"><Building2 className="w-8 h-8 text-[#002135] group-hover:text-white" /></div>
+                      <button onClick={() => handleRoleSelection('staff')} className="flex items-center gap-4 p-4 bg-white rounded-[2.5rem] border-2 border-slate-100 hover:border-brand-teal hover:shadow-xl transition-all group text-left">
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0"><Building2 className="w-8 h-8 text-white" /></div>
                           <div><p className="text-[#002135] text-lg font-black leading-tight">School employee</p><p className="text-xs text-slate-500 font-bold mt-1">Educators and admin</p></div>
                       </button>
                   </div>
@@ -596,47 +604,22 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
           )}
 
           {view === 'role_staff_choice' && (
-              <div className="w-full space-y-6 animate-slide-up text-left">
-                  <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 hover:text-[#002135] transition-colors"><ChevronLeft className="w-4 h-4" /> Back</button>
-                  <h3 className="text-2xl text-[#002135] mb-4 font-black">Select staff role</h3>
+              <div className="w-full space-y-6 animate-slide-up text-center">
+                  <button onClick={handleBack} className="flex flex-col items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 hover:text-[#002135] transition-colors mx-auto"><div className="w-8 h-8 rounded-full bg-black flex items-center justify-center"><ChevronLeft className="w-4 h-4 text-white" /></div> Back</button>
+                  <h3 className="text-2xl text-[#002135] mb-8 font-black">Select staff role</h3>
                   
-                  <div className="space-y-1 mb-8">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-4">Confirm your school first</label>
-                    <div className="relative">
-                        <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                        {isFetchingSchools ? (
-                            <div className="w-full pl-14 pr-6 py-4 bg-white border-2 border-slate-100 rounded-[1.5rem] text-sm font-bold text-slate-400 flex items-center gap-3">
-                                <Loader2 className="w-4 h-4 animate-spin" /> Fetching school list...
-                            </div>
-                        ) : schools.length === 0 ? (
-                            <div className="w-full pl-14 pr-6 py-4 bg-white border-2 border-red-50 rounded-[1.5rem] text-sm font-bold text-red-500 flex items-center gap-3">
-                                <AlertCircle className="w-4 h-4" /> No schools found. Contact support.
-                            </div>
-                        ) : (
-                            <select 
-                                value={selectedSchoolId} 
-                                onChange={e => setSelectedSchoolId(e.target.value)}
-                                className="w-full pl-14 pr-6 py-4 bg-white border-2 border-slate-100 focus:border-brand-teal rounded-[1.5rem] outline-none appearance-none text-sm font-bold text-[#002135]"
-                            >
-                                {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                            </select>
-                        )}
-                        <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 pointer-events-none" />
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 gap-4">
-                      <button onClick={() => handleStaffRoleSelection(UserRole.TEACHER)} className="flex items-center gap-6 p-8 bg-white rounded-[2.5rem] border-2 border-slate-100 hover:border-brand-teal hover:shadow-xl transition-all group text-left">
-                          <div className="p-4 bg-brand-navy/5 rounded-2xl group-hover:bg-[#002135] transition-colors"><GraduationCap className="w-8 h-8 text-[#002135] group-hover:text-white" /></div>
+                      <button onClick={() => handleStaffRoleSelection(UserRole.TEACHER)} className="flex items-center gap-4 p-4 bg-white rounded-[2.5rem] border-2 border-slate-100 hover:border-brand-teal hover:shadow-xl transition-all group text-left">
+                          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center flex-shrink-0"><GraduationCap className="w-8 h-8 text-white" /></div>
                           <div><p className="text-[#002135] text-lg font-black leading-tight">Educator</p><p className="text-xs text-slate-500 font-bold mt-1">Teacher or curriculum staff</p></div>
                       </button>
                       <div className="relative">
                         <button 
-                            disabled={isPrincipalRegistered || schools.length === 0} 
+                            disabled={isPrincipalRegistered} 
                             onClick={() => handleStaffRoleSelection(UserRole.PRINCIPAL)} 
-                            className={`w-full flex items-center gap-6 p-8 bg-white rounded-[2.5rem] border-2 transition-all group text-left ${isPrincipalRegistered || schools.length === 0 ? 'opacity-50 grayscale border-slate-100 cursor-not-allowed' : 'border-slate-100 hover:border-brand-teal hover:shadow-xl'}`}
+                            className={`w-full flex items-center gap-4 p-4 bg-white rounded-[2.5rem] border-2 transition-all group text-left ${isPrincipalRegistered ? 'opacity-50 grayscale border-slate-100 cursor-not-allowed' : 'border-slate-100 hover:border-brand-teal hover:shadow-xl'}`}
                         >
-                            <div className={`p-4 rounded-2xl transition-colors ${isPrincipalRegistered || schools.length === 0 ? 'bg-slate-100' : 'bg-brand-navy/5 group-hover:bg-[#002135]'}`}><ShieldCheck className={`w-8 h-8 ${isPrincipalRegistered || schools.length === 0 ? 'text-slate-400' : 'text-[#002135] group-hover:text-white'}`} /></div>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${isPrincipalRegistered ? 'bg-slate-100' : 'bg-white'}`}><ShieldCheck className={`w-8 h-8 ${isPrincipalRegistered ? 'text-slate-400' : 'text-white'}`} /></div>
                             <div><p className="text-[#002135] text-lg font-black leading-tight">Principal</p><p className="text-xs text-slate-500 font-bold mt-1">School leadership and admin</p></div>
                         </button>
                         {isPrincipalRegistered && <div className="absolute top-2 right-6 px-3 py-1 bg-red-50 border border-red-100 rounded-full flex items-center gap-1.5 shadow-sm"><ShieldAlert className="w-3 h-3 text-red-500" /><span className="text-[9px] text-red-600 font-black uppercase tracking-widest">Already registered</span></div>}
@@ -675,7 +658,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
 
           {view === 'form' && (
               <div className="w-full animate-slide-up text-left flex-1">
-                  <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 hover:text-[#002135] transition-colors"><ChevronLeft className="w-4 h-4" /> Back</button>
+                  <button onClick={handleBack} className="flex flex-col items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-widest mb-8 hover:text-[#002135] transition-colors mx-auto"><div className="w-8 h-8 rounded-full bg-black flex items-center justify-center"><ChevronLeft className="w-4 h-4 text-white" /></div> Back</button>
                   <div className="bg-white p-10 rounded-[3rem] border border-slate-200 shadow-sm">
                       <h3 className="text-3xl text-[#002135] mb-8 font-black tracking-tight">{mode === 'signin' ? 'Welcome back' : `New ${selectedRole.toLowerCase()} account`}</h3>
                       {errorMessage && (
@@ -731,9 +714,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
                                         )}
                                     </div>
                                 )}
-                                <div className="space-y-1 text-left">
-                                    <label className="text-[10px] text-slate-500 ml-4 font-black uppercase tracking-widest">Select your school</label>
-                                    <div className="relative">
+                                <div className="space-y-1 text-center">
+                                    <label className="text-[10px] text-slate-500 font-black uppercase tracking-widest block">Search your school</label>
+                                    <div className="relative z-10">
                                         <Building2 className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                                         {isFetchingSchools ? (
                                             <div className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-[1.5rem] text-sm font-bold text-slate-400 flex items-center gap-3">
@@ -744,15 +727,46 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin, allUsers = [] }) => 
                                                 No schools found.
                                             </div>
                                         ) : (
-                                            <select 
-                                                value={selectedSchoolId} 
-                                                onChange={e => setSelectedSchoolId(e.target.value)} 
-                                                className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-teal focus:bg-white rounded-[1.5rem] outline-none appearance-none font-bold text-sm"
-                                            >
-                                                {schools.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                                            </select>
+                                            <>
+                                                <input
+                                                    type="text"
+                                                    value={schoolSearchQuery}
+                                                    onChange={e => setSchoolSearchQuery(e.target.value)}
+                                                    placeholder="Type school name..."
+                                                    className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent focus:border-brand-teal focus:bg-white rounded-[1.5rem] outline-none text-sm font-bold text-[#002135] placeholder-slate-400"
+                                                />
+                                                {schoolSearchQuery && filteredSchools.length > 0 && (
+                                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-slate-100 rounded-[1.5rem] shadow-lg z-10 text-left">
+                                                        <div className="max-h-64 overflow-y-auto">
+                                                            {filteredSchools.map((school, index) => (
+                                                                <button
+                                                                    key={school.id}
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        setSelectedSchoolId(school.id);
+                                                                        setSchoolSearchQuery(school.name);
+                                                                    }}
+                                                                    className={`w-full px-6 py-3 text-left text-sm font-bold transition-colors hover:bg-slate-50 ${
+                                                                        selectedSchoolId === school.id 
+                                                                            ? 'text-brand-teal bg-slate-50 border-l-4 border-brand-teal pl-5' 
+                                                                            : 'text-[#002135]'
+                                                                    } ${index !== filteredSchools.length - 1 ? 'border-b border-slate-100' : ''}`}
+                                                                >
+                                                                    {school.name}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                {schoolSearchQuery && filteredSchools.length === 0 && (
+                                                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-red-50 rounded-[1.5rem] shadow-lg">
+                                                        <div className="px-6 py-4 text-sm font-bold text-red-500 flex items-center gap-2">
+                                                            <AlertCircle className="w-4 h-4" /> No schools match your search
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
-                                        <ChevronDown className="absolute right-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 pointer-events-none" />
                                     </div>
                                 </div>
                                 {selectedRole !== UserRole.PRINCIPAL && (

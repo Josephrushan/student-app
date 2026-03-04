@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Resource, ResourceType, User, UserRole, VisibilityType } from '../types';
 import { 
   Video, 
@@ -8,7 +8,8 @@ import {
   X, 
   Upload, 
   BookOpen, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft,
   Trash2, 
   Loader2, 
   Link as LinkIcon,
@@ -20,7 +21,8 @@ import {
   Globe,
   Building2,
   Lock,
-  GraduationCap
+  GraduationCap,
+  Maximize
 } from 'lucide-react';
 import { PRIMARY_GRADES, SECONDARY_GRADES, PRIMARY_SUBJECTS, HIGH_SCHOOL_SUBJECTS } from '../constants';
 import { saveDoc, removeDoc, uploadImage } from '../services/firebaseService';
@@ -30,14 +32,17 @@ interface TutoringModuleProps {
   currentUser: User;
   resources: Resource[];
   setResources: React.Dispatch<React.SetStateAction<Resource[]>>;
+  shouldOpenCreation?: boolean;
+  onCreationOpened?: () => void;
 }
 
-const TutoringModule: React.FC<TutoringModuleProps> = ({ currentUser, resources, setResources }) => {
-  const [selectedSubject, setSelectedSubject] = useState('All');
+const TutoringModule: React.FC<TutoringModuleProps> = ({ currentUser, resources, setResources, shouldOpenCreation, onCreationOpened }) => {
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedGrade, setSelectedGrade] = useState('All');
   const [viewingResource, setViewingResource] = useState<Resource | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [newTitle, setNewTitle] = useState('');
   const [newSubject, setNewSubject] = useState('');
@@ -45,6 +50,16 @@ const TutoringModule: React.FC<TutoringModuleProps> = ({ currentUser, resources,
   const [newType, setNewType] = useState<ResourceType>(ResourceType.LINK);
   const [newUrl, setNewUrl] = useState('');
   const [newDescription, setNewDescription] = useState('');
+
+  // Open creation form when triggered by shortcut
+  useEffect(() => {
+    if (shouldOpenCreation && !isCreating) {
+      setIsCreating(true);
+      if (onCreationOpened) {
+        onCreationOpened();
+      }
+    }
+  }, [shouldOpenCreation]);
   const [newMetadata, setNewMetadata] = useState('');
   const [newVisibility, setNewVisibility] = useState<VisibilityType>('school');
   const [newVisibleGrades, setNewVisibleGrades] = useState<string[]>([]);
@@ -76,13 +91,20 @@ const TutoringModule: React.FC<TutoringModuleProps> = ({ currentUser, resources,
       
       if (!canSeeByVisibility) return false;
 
-      // Apply filters
-      const matchesGrade = selectedGrade === 'All' || (r.forGrades?.includes(selectedGrade) || r.grade === selectedGrade);
-      const matchesSubject = selectedSubject === 'All' || r.subject === selectedSubject;
+      // Search by subject, title, and description only
+      const query = searchQuery.toLowerCase();
+      const matchesSearch = 
+        !query ||
+        (r.subject?.toLowerCase().includes(query)) ||
+        (r.title?.toLowerCase().includes(query)) ||
+        (r.description?.toLowerCase().includes(query));
       
-      return matchesGrade && matchesSubject;
+      // Filter by grade
+      const matchesGrade = selectedGrade === 'All' || (r.forGrades?.includes(selectedGrade) || r.grade === selectedGrade);
+      
+      return matchesSearch && matchesGrade;
     }).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-  }, [resources, currentUser.grade, currentUser.schoolId, selectedSubject, selectedGrade]);
+  }, [resources, currentUser.grade, currentUser.schoolId, searchQuery, selectedGrade]);
 
   const handleCreateResource = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,16 +216,170 @@ const TutoringModule: React.FC<TutoringModuleProps> = ({ currentUser, resources,
 
   return (
     <div className="max-w-7xl mx-auto space-y-12 animate-fade-in pb-32">
-      {viewingResource && (
-          <ResourceViewer 
-            isOpen 
-            onClose={() => setViewingResource(null)} 
-            title={viewingResource.title} 
-            description={viewingResource.description} 
-            type={viewingResource.type === ResourceType.LINK ? "Media Link" : "Study Resource"} 
-            url={viewingResource.url || ''} 
-            fileName={viewingResource.fileName}
-          />
+      {/* Fullscreen Video Overlay */}
+      {isFullscreen && viewingResource?.type === ResourceType.LINK && (
+        <div className="fixed inset-0 z-[700] bg-black flex flex-col items-center justify-center">
+          <button
+            onClick={() => setIsFullscreen(false)}
+            className="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors z-10"
+            title="Exit fullscreen"
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <div className="w-full h-full">
+            <ResourceViewer 
+              isOpen={true}
+              onClose={() => setIsFullscreen(false)}
+              title={viewingResource.title}
+              url={viewingResource.url || ''}
+              type="Media Link"
+              description={viewingResource.description}
+              fileName={viewingResource.fileName}
+            />
+          </div>
+        </div>
+      )}
+      
+      {viewingResource && !isFullscreen && (
+        <div className="fixed inset-0 z-[600] flex flex-col bg-white">
+          {/* Hero Section - Video or Thumbnail */}
+          <div className="relative w-full aspect-video bg-white p-6">
+            {viewingResource.type === ResourceType.LINK ? (
+              <div className="w-full h-full bg-black rounded-2xl overflow-hidden">
+                <ResourceViewer 
+                  isOpen={true}
+                  onClose={() => setViewingResource(null)}
+                  title={viewingResource.title}
+                  url={viewingResource.url || ''}
+                  type="Media Link"
+                  description={viewingResource.description}
+                  fileName={viewingResource.fileName}
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full bg-slate-100 rounded-2xl overflow-hidden">
+                {viewingResource.thumbnailUrl ? (
+                  <img src={viewingResource.thumbnailUrl} alt={viewingResource.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-slate-200">
+                    <FileText className="w-16 h-16 text-slate-400" />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          
+          {/* Back Button and Subject Bar */}
+          <div className="w-full px-6 py-4 flex items-center justify-between bg-white border-b border-slate-100">
+            <button 
+              onClick={() => {
+                setIsFullscreen(false);
+                setViewingResource(null);
+              }}
+              className="p-2 bg-black hover:brightness-110 text-white rounded-full transition-all"
+              title="Back"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <span className="px-4 py-1.5 rounded-full text-[9px] font-black uppercase bg-[#00ff8e] text-[#072432] tracking-widest">
+              {viewingResource.subject || 'Learning Resource'}
+            </span>
+          </div>
+          
+          {/* Content scrollable area */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar w-full max-w-5xl mx-auto">
+            <div className="p-6 sm:p-10 space-y-8 text-left">
+              
+              {/* Title */}
+              <h2 className="text-3xl sm:text-4xl font-black leading-tight tracking-tight text-slate-900">
+                {viewingResource.title}
+              </h2>
+              
+              {/* Metadata: Author & Date */}
+              <div className="flex items-center gap-4 text-slate-500 text-xs font-bold uppercase tracking-widest">
+                {viewingResource.authorName && <span>{viewingResource.authorName}</span>}
+                {viewingResource.timestamp && (
+                  <span>• {new Date(viewingResource.timestamp).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                )}
+              </div>
+              
+              {/* Description Section */}
+              {viewingResource.description && (
+                <div>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">About This Resource</h4>
+                  <p className="text-slate-700 leading-relaxed font-medium text-sm whitespace-pre-wrap">
+                    {viewingResource.description}
+                  </p>
+                </div>
+              )}
+              
+              {/* Embedded Resource Viewer - Only for document/media files */}
+              {viewingResource.type === ResourceType.FILE && (
+                <div>
+                  <h4 className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-600 mb-4">Document</h4>
+                  <div className="w-full h-96 rounded-2xl overflow-hidden bg-black shadow-lg">
+                    <ResourceViewer 
+                      isOpen={true}
+                      onClose={() => setViewingResource(null)}
+                      title={viewingResource.title}
+                      url={viewingResource.url || ''}
+                      type="Study Resource"
+                      description={viewingResource.description}
+                      fileName={viewingResource.fileName}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {/* Metadata Info */}
+              {viewingResource.metadata && (
+                <div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Details</p>
+                  <p className="text-sm font-medium text-slate-700">{viewingResource.metadata}</p>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Bottom Info Bar */}
+          <div className="flex justify-center pb-4 px-1">
+            <div className="bg-black/90 backdrop-blur px-6 py-4 flex items-center justify-between flex-shrink-0 rounded-full w-[calc(100%-8px)]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+                  {viewingResource.type === ResourceType.LINK ? (
+                    <Video className="w-5 h-5 text-white" />
+                  ) : (
+                    <FileText className="w-5 h-5 text-white" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white text-sm font-bold truncate max-w-xs">{viewingResource.title}</p>
+                  <p className="text-white/60 text-xs">{viewingResource.metadata || 'Resource'}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                {viewingResource.type === ResourceType.LINK && (
+                  <button
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="p-2 bg-[#00ff8e] hover:bg-[#00e67e] text-[#072432] rounded-lg transition-colors font-bold"
+                    title="Toggle fullscreen"
+                  >
+                    <Maximize className="w-4 h-4" />
+                  </button>
+                )}
+                <a 
+                  href={viewingResource.url} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors"
+                  title="Open in new tab"
+                >
+                  <LinkIcon className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="flex items-center gap-3 mb-6 px-4">
@@ -381,68 +557,95 @@ const TutoringModule: React.FC<TutoringModuleProps> = ({ currentUser, resources,
            </div>
       )}
 
-      <div className="flex overflow-x-auto pb-2 gap-4 hide-scrollbar px-2">
-          <button onClick={() => setSelectedSubject('All')} className={`flex-shrink-0 px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedSubject === 'All' ? 'bg-[#072432] text-[#00ff8e] border-[#072432] shadow-xl' : 'bg-white text-slate-400 border-white hover:border-slate-100 shadow-sm'}`}>All Subjects</button>
-          {availableSubjects.map(s => (
-              <button key={s} onClick={() => setSelectedSubject(s)} className={`flex-shrink-0 px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedSubject === s ? 'bg-[#072432] text-[#00ff8e] border-[#072432] shadow-xl' : 'bg-white text-slate-400 border-white hover:border-slate-100 shadow-sm'}`}>{s}</button>
-          ))}
-      </div>
-
-      <div className="flex overflow-x-auto pb-8 gap-4 hide-scrollbar px-2">
-          <button onClick={() => setSelectedGrade('All')} className={`flex-shrink-0 px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedGrade === 'All' ? 'bg-[#00ff8e] text-[#072432] border-[#00ff8e] shadow-xl' : 'bg-white text-slate-400 border-white hover:border-slate-100 shadow-sm'}`}>All Grades</button>
+      <div className="flex flex-col gap-4 px-2 mb-6">
+        <input
+          type="text"
+          placeholder="Search subject or title..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-6 py-3.5 rounded-2xl border-2 border-slate-200 bg-white text-slate-900 font-bold text-[11px] uppercase tracking-wider placeholder-slate-400 focus:outline-none focus:border-[#072432] focus:ring-2 focus:ring-[#072432]/20 transition-all"
+        />
+        <select
+          value={selectedGrade}
+          onChange={(e) => setSelectedGrade(e.target.value)}
+          className="w-full px-6 py-3.5 rounded-2xl border-2 border-black bg-black text-white font-bold text-[11px] uppercase tracking-wider focus:outline-none focus:ring-2 focus:ring-white/20 transition-all appearance-none cursor-pointer"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='white' d='M6 9L1 4h10z'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 12px center',
+            paddingRight: '36px'
+          }}
+        >
+          <option value="All">All Grades</option>
           {PRIMARY_GRADES.map(g => (
-              <button key={g} onClick={() => setSelectedGrade(g)} className={`flex-shrink-0 px-8 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${selectedGrade === g ? 'bg-[#00ff8e] text-[#072432] border-[#00ff8e] shadow-xl' : 'bg-white text-slate-400 border-white hover:border-slate-100 shadow-sm'}`}>{g}</button>
+            <option key={g} value={g}>{g}</option>
           ))}
+        </select>
+        {searchQuery && (
+          <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wide px-2">
+            Found {filteredResources.length} result{filteredResources.length !== 1 ? 's' : ''}
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-3 px-2 mb-6 text-left">
          <div className="p-2 bg-[#1a1a1a] rounded-lg text-white font-black text-[10px] uppercase">{currentUser.grade}</div>
-         <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">{selectedSubject === 'All' ? 'Mathematics' : selectedSubject}</h3>
+         <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase">Resources</h3>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 text-left px-2">
+      <div className="space-y-4 px-2">
         {filteredResources.map((res) => (
-            <div key={res.id} className="bg-white rounded-[1.5rem] border-2 border-transparent shadow-sm hover:shadow-2xl hover:border-brand-teal transition-all duration-500 flex flex-col overflow-hidden group">
-                <div className="relative aspect-[3/4] overflow-hidden bg-slate-50">
+            <div key={res.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden hover:shadow-lg transition-all duration-300 group flex flex-col w-full p-4 md:p-6 relative">
+                {/* Top: Subject/Type Badge */}
+                <div className="mb-3">
+                    <span className="px-4 py-1.5 bg-black text-white text-[7px] md:text-[9px] font-black uppercase tracking-widest rounded-full inline-block">{res.subject || (res.type === ResourceType.LINK ? 'Video' : 'Document')}</span>
+                </div>
+
+                {/* Title */}
+                <div className="mb-3">
+                    <h3 className="text-xl md:text-2xl font-black leading-tight tracking-tight uppercase text-slate-900">{res.title}</h3>
+                </div>
+
+                {/* Description/Metadata */}
+                <div className="mb-4">
+                    <p className="text-[9px] md:text-[11px] font-medium line-clamp-2 text-slate-600">{res.metadata || (res.type === ResourceType.LINK ? 'Video Content' : 'Study Resource')}</p>
+                    {(res.contributedBy || res.schoolId !== currentUser.schoolId) && (
+                      <p className="text-[8px] text-slate-500 mt-2 font-semibold">
+                        {res.contributedBy ? `By ${res.contributedBy}` : `From another school`}
+                      </p>
+                    )}
+                </div>
+
+                {/* Large Thumbnail Area */}
+                <div className="w-full h-40 md:h-56 mb-4 bg-[#f1f5f9] rounded-2xl flex items-center justify-center relative overflow-hidden border border-slate-100">
                     {res.thumbnailUrl ? (
-                      <img src={res.thumbnailUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt="" />
+                      <img src={res.thumbnailUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-200">
+                      <div className="w-full h-full flex items-center justify-center text-slate-300">
                         {res.type === ResourceType.LINK ? <Video className="w-12 h-12" /> : <FileText className="w-12 h-12" />}
                       </div>
                     )}
                     {(res.isPublic || res.isGlobal) && (
-                      <div className="absolute top-2 left-2 flex gap-1">
-                        {res.isGlobal && <div className="px-2 py-1 bg-emerald-500 text-white text-[7px] font-black uppercase rounded-md shadow-lg">Global</div>}
-                        {res.isPublic && <div className="px-2 py-1 bg-blue-500 text-white text-[7px] font-black uppercase rounded-md shadow-lg">Shared</div>}
+                      <div className="absolute top-4 left-4 flex gap-2">
+                        {res.isGlobal && <div className="px-3 py-1.5 bg-emerald-500 text-white text-[7px] font-black uppercase rounded-full shadow-lg">Global</div>}
+                        {res.isPublic && <div className="px-3 py-1.5 bg-blue-500 text-white text-[7px] font-black uppercase rounded-full shadow-lg">Shared</div>}
                       </div>
                     )}
                     {isPrincipal && (
-                      <button onClick={(e) => { e.stopPropagation(); if(confirm("Are you sure?")) removeDoc('resources', res.id); }} className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={(e) => { e.stopPropagation(); if(confirm("Are you sure?")) removeDoc('resources', res.id); }} className="absolute top-3 right-3 p-2.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     )}
                 </div>
 
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                        <h3 className="text-sm font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors mb-1 truncate">{res.title}</h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{res.metadata || (res.type === ResourceType.LINK ? 'Video Content' : 'Study Resource')}</p>
-                        {(res.contributedBy || res.schoolId !== currentUser.schoolId) && (
-                          <p className="text-[9px] text-slate-500 mt-2 font-semibold">
-                            {res.contributedBy ? `By ${res.contributedBy}` : `From another school`}
-                          </p>
-                        )}
-                    </div>
-
-                    <div className="mt-4 flex gap-2">
-                        <button onClick={() => setViewingResource(res)} className="flex-1 py-3 bg-slate-200 text-slate-600 rounded-full font-black flex items-center justify-center hover:bg-slate-300 transition-all">
-                            <Eye className="w-4 h-4" />
-                        </button>
-                        <a href={res.url} target="_blank" rel="noreferrer" download={res.fileName} className="flex-1 py-3 bg-[#072432] text-[#00ff8e] rounded-full font-black flex items-center justify-center hover:brightness-110 transition-all">
-                            <Download className="w-4 h-4" />
-                        </a>
-                    </div>
+                {/* Bottom: Action Buttons */}
+                <div className="mt-4 flex gap-4 justify-center">
+                    <button onClick={() => setViewingResource(res)} className="flex-1 px-6 py-3 bg-[#072432] text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-md hover:brightness-110 active:scale-95 transition-all flex items-center gap-2 justify-center">
+                        <Eye className="w-4 h-4" /> VIEW
+                    </button>
+                    <a href={res.url} target="_blank" rel="noreferrer" download={res.fileName} className="flex-1 px-6 py-3 bg-black text-white rounded-full font-black uppercase text-[9px] md:text-[10px] tracking-widest shadow-md hover:bg-slate-800 active:scale-95 transition-all flex items-center gap-2 justify-center">
+                        <Download className="w-4 h-4" /> DOWNLOAD
+                    </a>
                 </div>
             </div>
         ))}

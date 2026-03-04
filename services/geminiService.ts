@@ -8,7 +8,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 export const generateAssignmentIdea = async (subject: string, grade: string): Promise<string> => {
   try {
     // Following guidelines: initialize GoogleGenAI inside the function to use the latest API key.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || '' });
     
     // Using gemini-3-pro-preview for complex text generation tasks requiring reasoning.
     const model = 'gemini-3-pro-preview';
@@ -57,7 +57,7 @@ export const generateAssignmentIdea = async (subject: string, grade: string): Pr
 export const generateResourceContent = async (topic: string, type: string): Promise<string> => {
   try {
     // Following guidelines: initialize GoogleGenAI inside the function.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || '' });
     
     // Using gemini-3-flash-preview for basic text summarization tasks.
     const model = 'gemini-3-flash-preview';
@@ -84,7 +84,7 @@ export const generateResourceContent = async (topic: string, type: string): Prom
 export const askTutor = async (question: string, grade: string): Promise<string> => {
   try {
     // Following guidelines: initialize GoogleGenAI inside the function.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || '' });
     
     // Using gemini-3-flash-preview for helpful tutoring interactions.
     const model = 'gemini-3-flash-preview';

@@ -3,7 +3,6 @@
 // Primary: OneSignal (works everywhere: web, iOS, Android, Huawei)
 // Fallback: Web Push API, Huawei HMS Push, Firebase Messaging
 
-import DeviceDetector from 'device-detector-js';
 import { initializeHuaweiPushKit, getHuaweiPushToken, isHmsPushAvailable, isQuickApp } from './huaweiPushService';
 
 export const requestNotificationPermission = async (): Promise<PushSubscription | null> => {
@@ -83,6 +82,13 @@ export const requestNotificationPermission = async (): Promise<PushSubscription 
 
     // FINAL FALLBACK: Standard Web Push Notification flow for non-Huawei devices or when HMS isn't available
     console.log('2️⃣ Attempting standard Web Push notification setup (final fallback)...');
+    
+    // Skip Service Worker registration in development mode to prevent caching issues
+    const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (isDevelopment) {
+      console.log('ℹ️ Service Worker registration disabled in development mode');
+      return null;
+    }
     
     // Browser support checks
     if (!('Notification' in window)) {
@@ -263,18 +269,8 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 export const isHuaweiDevice = (): boolean => {
   try {
-    // Method 1: device-detector-js
-    const deviceDetector = new DeviceDetector();
-    const userAgent = navigator.userAgent;
-    const device = deviceDetector.parse(userAgent);
-
-    if (device?.brand?.toLowerCase() === 'huawei') {
-      console.log('✅ Huawei device detected via device-detector');
-      return true;
-    }
-
-    // Method 2: Fallback - check user agent string directly for Huawei markers
-    const ua = userAgent.toLowerCase();
+    // Check user agent string directly for Huawei markers
+    const ua = navigator.userAgent.toLowerCase();
     const huaweiMarkers = [
       'huawei',          // Direct Huawei mention
       'honor',           // Honor brand (Huawei subsidiary)

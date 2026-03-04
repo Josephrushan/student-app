@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { X, ExternalLink, FileText, PlayCircle, Image as ImageIcon, Loader, AlertCircle, Download } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ExternalLink, FileText, PlayCircle, Image as ImageIcon, Loader, AlertCircle, Download, ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import mammoth from 'mammoth';
 
@@ -25,6 +25,10 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
   const [imageZoom, setImageZoom] = useState(1);
   const [docHtml, setDocHtml] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string>('');
+  const [isYoutubeFullscreen, setIsYoutubeFullscreen] = useState(false);
+  const youtubeIframeRef = useRef<HTMLIFrameElement>(null);
+  const videoPlayerRef = useRef<HTMLVideoElement>(null);
+  const videoContainerRef = useRef<HTMLDivElement>(null);
 
   if (!isOpen) return null;
 
@@ -192,7 +196,7 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
       console.log('Rendering image');
       return (
         <div className="flex flex-col h-full bg-slate-900 rounded-2xl overflow-hidden">
-          <div className="flex-1 flex items-center justify-center bg-black overflow-auto">
+          <div className="flex-1 flex items-center justify-center bg-white overflow-auto">
             <img 
               src={url} 
               className="max-w-full object-contain rounded-xl shadow-2xl transition-transform duration-200"
@@ -230,21 +234,55 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
     // MP4 Video
     if (fileType === 'mp4') {
       console.log('Rendering MP4 video');
+      
+      const handleVideoFullscreen = async () => {
+        if (videoPlayerRef.current) {
+          try {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+            } else {
+              await videoPlayerRef.current.requestFullscreen().catch(() => {
+                // Fallback for browsers that don't support element fullscreen
+                if (videoContainerRef.current) {
+                  videoContainerRef.current.requestFullscreen();
+                }
+              });
+            }
+          } catch (err) {
+            console.error('Fullscreen error:', err);
+          }
+        }
+      };
+
       return (
-        <div className="w-full h-full bg-black rounded-2xl overflow-hidden relative shadow-2xl flex items-center justify-center" onContextMenu={(e) => e.preventDefault()}>
+        <div ref={videoContainerRef} className="w-full h-full bg-black rounded-2xl overflow-hidden relative shadow-2xl flex flex-col">
           {videoUrl ? (
-            <video 
-              src={videoUrl}
-              controls
-              autoPlay={false}
-              className="w-full h-full object-contain"
-              style={{ maxHeight: '100%', maxWidth: '100%' }}
-              onContextMenu={(e) => e.preventDefault()}
-            />
+            <>
+              <video 
+                ref={videoPlayerRef}
+                src={videoUrl}
+                controls
+                autoPlay={false}
+                className="flex-1 w-full object-contain"
+                style={{ maxHeight: '100%' }}
+                onContextMenu={(e) => e.preventDefault()}
+              />
+              <div className="bg-white/10 border-t border-white/20 px-4 py-3 flex items-center justify-between">
+                <p className="text-white text-sm font-medium truncate">{title}</p>
+                <button
+                  onClick={handleVideoFullscreen}
+                  className="p-2 bg-[#072432] hover:bg-[#0a3847] text-white rounded-lg transition-colors flex items-center gap-2"
+                  title="Toggle fullscreen"
+                >
+                  <Maximize className="w-4 h-4" />
+                  <span className="text-xs font-bold uppercase tracking-wide hidden sm:inline">Fullscreen</span>
+                </button>
+              </div>
+            </>
           ) : (
-            <div className="text-center">
-              <Loader className="w-12 h-12 animate-spin text-indigo-500 mb-4 mx-auto" />
-              <p className="text-white text-sm font-medium">Loading video...</p>
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <Loader className="w-12 h-12 animate-spin text-[#00ff8e] mb-4 mx-auto" />
+              <p className="text-slate-300 text-sm font-medium">Loading video...</p>
             </div>
           )}
         </div>
@@ -259,14 +297,50 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
       else if (url.includes('youtu.be/')) embedUrl = url.replace('youtu.be/', 'youtube.com/embed/');
       else if (url.includes('vimeo.com/')) embedUrl = url.replace('vimeo.com/', 'player.vimeo.com/video/');
 
+      const handleFullscreen = async () => {
+        if (youtubeIframeRef.current) {
+          try {
+            if (document.fullscreenElement) {
+              document.exitFullscreen();
+              setIsYoutubeFullscreen(false);
+            } else {
+              await youtubeIframeRef.current.requestFullscreen().catch(err => {
+                console.log('Fullscreen request failed:', err);
+                // Fallback: try to fullscreen the parent container
+                if (youtubeIframeRef.current?.parentElement) {
+                  youtubeIframeRef.current.parentElement.requestFullscreen();
+                }
+              });
+              setIsYoutubeFullscreen(true);
+            }
+          } catch (err) {
+            console.error('Fullscreen error:', err);
+          }
+        }
+      };
+
       return (
-        <div className="w-full h-full bg-black rounded-2xl overflow-hidden relative shadow-2xl">
-          <iframe 
-            src={embedUrl} 
-            className="absolute inset-0 w-full h-full border-0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-            allowFullScreen
-          />
+        <div className="w-full h-full bg-black rounded-2xl overflow-hidden relative shadow-2xl flex flex-col">
+          <div className="relative flex-1 bg-black rounded-2xl overflow-hidden">
+            <iframe 
+              ref={youtubeIframeRef}
+              src={embedUrl} 
+              className="w-full h-full border-0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+              allowFullScreen
+            />
+          </div>
+          <div className="bg-white/10 border-t border-white/20 px-4 py-3 flex items-center justify-between">
+            <p className="text-white text-sm font-medium truncate">{title}</p>
+            <button
+              onClick={handleFullscreen}
+              className="p-2 bg-[#072432] hover:bg-[#0a3847] text-white rounded-lg transition-colors flex items-center gap-2"
+              title="Toggle fullscreen"
+            >
+              <Maximize className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wide hidden sm:inline">Fullscreen</span>
+            </button>
+          </div>
         </div>
       );
     }
@@ -276,7 +350,7 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
       console.log('Rendering PDF - pages loaded:', pdfPages.length);
       return (
         <div className="flex flex-col h-full bg-slate-900 rounded-2xl overflow-hidden">
-          <div className="flex-1 flex items-center justify-center bg-black overflow-auto p-4">
+          <div className="flex-1 flex items-center justify-center bg-white overflow-auto p-4">
             {pdfPages.length > 0 ? (
               <img 
                 src={pdfPages[currentPdfPage]} 
@@ -286,32 +360,32 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
               />
             ) : (
               <div className="text-center">
-                <Loader className="w-12 h-12 animate-spin text-indigo-500 mb-4 mx-auto" />
-                <p className="text-white text-sm font-medium">Loading PDF...</p>
+                <Loader className="w-12 h-12 animate-spin text-[#00ff8e] mb-4 mx-auto" />
+                <p className="text-slate-700 text-sm font-medium">Loading PDF...</p>
               </div>
             )}
           </div>
           {pdfPages.length > 0 && (
-            <div className="bg-slate-800 p-4 border-t border-slate-700 space-y-3">
+            <div className="bg-white p-4 border-t border-gray-300 space-y-3">
               <div className="flex items-center justify-center gap-2">
                 <button
                   onClick={() => setPdfZoom(Math.max(0.5, pdfZoom - 0.2))}
-                  className="px-3 py-2 bg-slate-700 text-white rounded-lg font-bold text-sm hover:bg-slate-600 transition-all"
+                  className="px-3 py-2 bg-gray-200 text-black rounded-lg font-bold text-sm hover:bg-gray-300 transition-all"
                 >
                   −
                 </button>
-                <span className="text-sm font-bold text-white min-w-16 text-center">
+                <span className="text-sm font-bold text-black min-w-16 text-center">
                   {Math.round(pdfZoom * 100)}%
                 </span>
                 <button
                   onClick={() => setPdfZoom(Math.min(3, pdfZoom + 0.2))}
-                  className="px-3 py-2 bg-slate-700 text-white rounded-lg font-bold text-sm hover:bg-slate-600 transition-all"
+                  className="px-3 py-2 bg-gray-200 text-black rounded-lg font-bold text-sm hover:bg-gray-300 transition-all"
                 >
                   +
                 </button>
                 <button
                   onClick={() => setPdfZoom(1)}
-                  className="px-3 py-2 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition-all"
+                  className="px-3 py-2 bg-black text-white rounded-lg font-bold text-sm hover:bg-slate-800 transition-all"
                 >
                   Reset
                 </button>
@@ -320,19 +394,19 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
                 <button
                   onClick={() => setCurrentPdfPage(Math.max(0, currentPdfPage - 1))}
                   disabled={currentPdfPage === 0}
-                  className="px-4 py-2 bg-slate-700 text-white rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-slate-600 transition-all"
+                  className="w-10 h-10 bg-gray-200 text-black rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-gray-300 transition-all"
                 >
-                  ← Previous
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
-                <span className="text-sm font-bold text-white">
+                <span className="text-sm font-bold text-black">
                   Page {currentPdfPage + 1} of {pdfPages.length}
                 </span>
                 <button
                   onClick={() => setCurrentPdfPage(Math.min(pdfPages.length - 1, currentPdfPage + 1))}
                   disabled={currentPdfPage === pdfPages.length - 1}
-                  className="px-4 py-2 bg-slate-700 text-white rounded-lg font-bold text-sm disabled:opacity-50 hover:bg-slate-600 transition-all"
+                  className="w-10 h-10 bg-gray-200 text-black rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-gray-300 transition-all"
                 >
-                  Next →
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -399,7 +473,7 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
   };
 
   return (
-    <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 sm:p-8 bg-slate-950/95 backdrop-blur-xl animate-fade-in">
+    <div className="fixed inset-0 z-[700] flex items-center justify-center p-4 sm:p-8 bg-white/95 backdrop-blur-xl animate-fade-in">
       <div className="relative bg-white rounded-[3rem] shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh] overflow-hidden animate-scale-up border border-white/10">
         <div className="flex items-center justify-between px-8 py-6 border-b border-slate-50 bg-white flex-shrink-0">
             <div className="text-left overflow-hidden">
@@ -413,7 +487,7 @@ const ResourceViewer: React.FC<ResourceViewerProps> = ({ isOpen, onClose, title,
                         target="_blank" 
                         rel="noreferrer" 
                         download={fileName}
-                        className="p-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 rounded-2xl transition-all shadow-sm flex items-center gap-2"
+                        className="p-3 bg-black hover:bg-slate-800 text-white rounded-2xl transition-all shadow-sm flex items-center gap-2"
                         title="Download file"
                     >
                         <ExternalLink className="w-5 h-5" />
